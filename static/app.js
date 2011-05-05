@@ -1,11 +1,3 @@
-function bind(obj, method) {
-  var args = Array.prototype.slice.call(arguments, 2);
-  return function(){
-    var foundArgs = Array.prototype.slice.call(arguments);
-    method.apply(obj, args.concat(foundArgs));
-  };
-};
-
 unselectAll = function() {
   $(".thumb-selected").removeClass("thumb-selected");
   $(".thumb-start").removeClass("thumb-start");
@@ -129,6 +121,7 @@ window.onload = function() {
   for (var i = 0; i < thumbs.length; ++i) {
     $("#img_selector").append(thumbs[i]);
   }
+  var handle = new SliderHandle($('#handle'), document.body, {maxX: 800, stepSize: 50});
   /*
   var slideFn = function(event, ui) {
     $("#img_slider_value").val("From " + ui.values[0] + " to " + ui.values[1]);
