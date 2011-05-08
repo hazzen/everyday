@@ -107,7 +107,7 @@ createImageThumbs = function() {
       src: "db_img?start=" + i,
       img_id: i,
       width: 90,
-      height: 60,
+      height: 60
     });
     imgThumbs.push(imgElem);
     var thumbUi = new ThumbUi(imgElem);
@@ -117,11 +117,15 @@ createImageThumbs = function() {
 var GLOBAL = {};
 window.onload = function() {
   GLOBAL.tracker = new SlideTracker();
-  var thumbs = createImageThumbs();
-  for (var i = 0; i < thumbs.length; ++i) {
-    $("#img_selector").append(thumbs[i]);
+  var selector = $("#img_selector");
+  if (selector.length) {
+    var thumbs = createImageThumbs();
+    for (var i = 0; i < thumbs.length; ++i) {
+      $("#img_selector").append(thumbs[i]);
+    }
   }
-  var handle = new SliderHandle($('#handle'), document.body, {maxX: 800, stepSize: 50});
+  //var handle = new SliderHandle($('#handle'), document.body, {maxX: 800, stepSize: 50});
+  var slider = new Slider($('#slider'), document.body);
   /*
   var slideFn = function(event, ui) {
     $("#img_slider_value").val("From " + ui.values[0] + " to " + ui.values[1]);
