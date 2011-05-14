@@ -124,18 +124,5 @@ window.onload = function() {
       $("#img_selector").append(thumbs[i]);
     }
   }
-  //var handle = new SliderHandle($('#handle'), document.body, {maxX: 800, stepSize: 50});
-  var slider = new Slider($('#slider'), document.body);
-  /*
-  var slideFn = function(event, ui) {
-    $("#img_slider_value").val("From " + ui.values[0] + " to " + ui.values[1]);
-  };
-  var slider = $("#img_slider_range").slider(
-      { range: true,
-        min: 0,
-        max: 13,
-        values: [0, 0],
-        slide: slideFn });
-  slideFn(null, {values: [0, 0]});
-  */
+  var slider = new Slider($('#main-slider'), document.body, {numSteps:10});
 };
