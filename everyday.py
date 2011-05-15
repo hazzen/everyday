@@ -66,13 +66,20 @@ class DbImageHandler(webapp.RequestHandler):
     date_part = file_name[1 + file_name.find('/'):file_name.rfind('_')]
     return datetime.datetime.strptime(date_part, '%Y%m%d')
 
+  def __BuildOffsets(self, paths):
+    offsets = []
+    for parts in paths:
+      _, x, y = parts.strip().split(' ')
+      offsets.append((-int(x) / 4, -int(y) / 4))
+    return offsets
+
   def get(self):
     path_file = open('normalized_2.txt')
     paths = path_file.readlines()
     path_file.close()
 
     image_data = []
-    offsets = []
+    offsets = self.__BuildOffsets(paths)
     alpha = 1.0 / len(paths)
     start = int(self.request.get('start', ''))
     end = self.request.get('end')
@@ -99,16 +106,15 @@ class DbImageHandler(webapp.RequestHandler):
         data = images.resize(data, width=w / 4)
         f.close()
         image_data.append(data)
-        offsets.append((-int(x) / 4, -int(y) / 4))
 
       base_x, base_y = min(offsets)
       comp_tuples = [(data, x - base_x, y - base_y, alpha, images.TOP_LEFT)
-                     for (data, (x, y)) in zip(image_data, offsets)]
+                     for (data, (x, y)) in zip(image_data, offsets[start:1 + end])]
       comp_data = images.composite(comp_tuples, 640, 480)
       maybe_stored.processed_image = comp_data
       maybe_stored.put()
 
-    self.response.headers['Content-Type'] = 'image/jpg'
+    self.response.headers['Content-Type'] = 'image/jpeg'
     self.response.out.write(maybe_stored.processed_image)
 
 

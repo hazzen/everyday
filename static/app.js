@@ -101,7 +101,7 @@ document.onmouseup = function(e) {
 };
 createImageThumbs = function() {
   imgThumbs = [];
-  for (var i = 0; i < 13; ++i) {
+  for (var i = 0; i < 14; ++i) {
     var imgElem = $("<img />", {
       class: "highlight-thumb",
       src: "db_img?start=" + i,
@@ -124,7 +124,7 @@ window.onload = function() {
       $("#img_selector").append(thumbs[i]);
     }
   }
-  var slider = new Slider($('#main-slider'), document.body, {numSteps:13});
+  var slider = new Slider($('#main-slider'), document.body, {numSteps:14});
   $(slider).bind(Slider.Events.NEW_VALUE, function(event, newValue) {
     var holder = $("#img_holder");
     holder.empty();
