@@ -124,5 +124,12 @@ window.onload = function() {
       $("#img_selector").append(thumbs[i]);
     }
   }
-  var slider = new Slider($('#main-slider'), document.body, {numSteps:10});
+  var slider = new Slider($('#main-slider'), document.body, {numSteps:13});
+  $(slider).bind(Slider.Events.NEW_VALUE, function(event, newValue) {
+    var holder = $("#img_holder");
+    holder.empty();
+    holder.append($("<img />",
+                    { src: "db_img?start=" + newValue,
+                      style: "margin-left:auto;margin-right:auto;display:block"}));
+  });
 };

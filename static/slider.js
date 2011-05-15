@@ -48,6 +48,10 @@ Slider.prototype.onClick = function(event) {
   this.handle_.setRatio(this.pixelToRatio(event.clientX));
 };
 
+Slider.Events = {
+  NEW_VALUE: 'slidernewvalue'
+};
+
 function SliderHandle(elem, slider, opt_parentElem) {
   this.elem_ = $(elem);
   this.parentElem_ = opt_parentElem;
@@ -63,15 +67,19 @@ function SliderHandle(elem, slider, opt_parentElem) {
 };
 
 SliderHandle.prototype.setRatio = function(ratio) {
-  if (this.slider_.getOpt('numSteps')) {
-    var stepSize = 1.0 / (this.slider_.getOpt('numSteps') - 1);
-    this.currentStep_ = Math.round(ratio / stepSize);
-    ratio = stepSize * this.currentStep_;
-  }
   if (ratio < 0) {
     ratio = 0;
   } else if (ratio > 1) {
     ratio = 1;
+  }
+  if (this.slider_.getOpt('numSteps')) {
+    var stepSize = 1.0 / (this.slider_.getOpt('numSteps') - 1);
+    var newStep = Math.round(ratio / stepSize);
+    if (newStep != this.currentStep_) {
+      $(this.slider_).trigger(Slider.Events.NEW_VALUE, newStep);
+    }
+    this.currentStep_ = newStep;
+    ratio = stepSize * this.currentStep_;
   }
   this.currentRatio_ = ratio;
   this.elem_.css('left', 100 * ratio + '%');
