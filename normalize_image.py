@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sys
 
 from PyQt4 import QtCore
@@ -57,7 +59,7 @@ def main():
   images = genImageNames('names.txt')
   app = QtGui.QApplication(sys.argv)
   pic = QtGui.QPixmap(images[0])
-  view = ImageView(origPixmap=pic, images=images[1:])
+  view = ImageView(origPixmap=pic, images=images)
   scene = QtGui.QGraphicsScene()
   scene.addPixmap(pic)
 
