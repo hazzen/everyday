@@ -74,7 +74,7 @@ class DbImageHandler(webapp.RequestHandler):
     return offsets
 
   def get(self):
-    path_file = open('normalized_2.txt')
+    path_file = open('offsets_1.txt')
     paths = path_file.readlines()
     path_file.close()
 
@@ -102,8 +102,8 @@ class DbImageHandler(webapp.RequestHandler):
         file_name, x, y = parts.strip().split(' ')
         f = open(file_name)
         data = f.read()#images.resize(f.read(), width=800)
-        w = images.Image(data).width
-        data = images.resize(data, width=w / 4)
+        #w = images.Image(data).width
+        #data = images.resize(data, width=w / 4)
         f.close()
         image_data.append(data)
 

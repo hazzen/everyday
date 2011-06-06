@@ -1,4 +1,4 @@
-processed_images/20110105_1.jpg 1577 666
+processed_images/20110105_1.jpg 1608 676
 processed_images/20110106_1.jpg 1638 699
 processed_images/20110107_1.jpg 1602 680
 processed_images/20110111_1.jpg 1588 606
