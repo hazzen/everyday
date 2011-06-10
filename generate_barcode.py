@@ -45,35 +45,6 @@ def make_composite(rgbs, output, height, line_width):
 
 def print_weather_html(rgbs, data, station):
   day_data = dict((os.path.basename(x['file'])[:8], x) for x in rgbs)
-  print '''<html><head><style type="text/css">
-    /* based on a list apart article: http://www.alistapart.com/articles/accessibledatavisualization/ */
-    * { 
-      margin: 0; 
-      padding: 0; 
-      list-style-type: none;
-    }
-    .bargraph { 
-      float: left; 
-    }
-    .bargraph .bar { 
-      width: 8px; 
-      height: 200px; 
-	    position: relative;
-      float: left; 
-    }
-    .bargraph .bar .value { 
-      display: block; 
-      position: absolute; 
-      bottom: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 0; 
-      background: #AAA;
-      overflow: hidden; 
-      text-indent: -9999px;
-    }
-  </style></head><body>
-  '''
   print '<span class="bargraph">'
   for line in fileinput.input(data):
     if line.startswith(station):
@@ -88,9 +59,19 @@ def print_weather_html(rgbs, data, station):
         min = min[:-1]
       avg, max, min = float(avg), float(max), float(min)
       print '''
-  <span class="bar"><span class="value" style="height: {height}%; background-color: {rgb}">
-    {height}
-  </span></span>'''.format(height=int(max),
+  <span class="bar">
+    <span class="value" style="height: {height}%; background-color: {rgb}">
+      {height}
+    </span>
+    <span class="tick" style="height: {max}%; border-top: thin solid black;">
+      {max}
+    </span>
+    <span class="tick" style="height: {min}%; border-top: thin solid black;">
+      {min}
+    </span>
+  </span>'''.format(height=avg,
+                    max=max,
+                    min=min,
                     rgb=day['rgbs'])
   print '</span>'
 
