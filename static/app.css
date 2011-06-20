@@ -3,10 +3,18 @@
   margin: 0; 
   padding: 0; 
   list-style-type: none;
+  font-family: Georgia, sans-serif;
+  color: #ccc;
+}
+
+.title {
+  text-align: center;
+  height: 0px;
 }
 
 .bargraph { 
-  float: left; 
+  display: table;
+  margin: 200px auto;
 }
 
 .bargraph .bar { 
@@ -38,6 +46,37 @@
   text-indent: -9999px;
 }
 
+.bargraph .bar .label {
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  writing-mode: tb;
+  display: block;
+  position: absolute;
+  left: -2em;
+  bottom: -4em;
+  white-space: nowrap;
+  border-bottom: 1px solid #abf;
+}
+
+.bargraph .guide {
+  position: relative;
+}
+
+.bargraph .guide-line {
+  position: absolute;
+  width: 100%;
+  top: 0%;
+  border-bottom: 1px solid black;
+  z-index: 1;
+}
+
+.bargraph .guide-label {
+  position: absolute;
+  height: 0%;
+  left: 100%;
+  margin-top: -0.5em;
+}
+
 .slider-handle {
   display: inline-block;
   width: 20px;
@@ -67,4 +106,5 @@
 
 body {
   background: #333;
+  color: #abf;
 }

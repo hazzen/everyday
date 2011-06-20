@@ -1,6 +1,7 @@
 #! /usr/bin/env python2.7
 
 import argparse
+import datetime
 import fileinput
 import glob
 import operator
@@ -46,11 +47,27 @@ def make_composite(rgbs, output, height, line_width):
     run_command(cmd)
 
 class DayData:
-  def __init__(self, filename='', rgb=''):
-    self.filename = filename
+  def __init__(self, filename='', rgb='rgb(255, 255, 255)'):
     self.rgb = rgb
     if filename:
-      self.date = os.path.basename(self.filename)[:8]
+      self.filename = filename
+      self._SetDate(os.path.basename(self.filename)[:8])
+    self.avg = 0
+    self.min = 0
+    self.max = 0
+
+  def _SetDate(self, date):
+    self.date_str = date
+    year = int(date[0:4], 10)
+    month = int(date[4:6], 10)
+    day = int(date[6:8], 10)
+    self.date = datetime.date(year, month, day)
+
+  @staticmethod
+  def EmptyDay(date):
+    empty = DayData()
+    empty._SetDate(date.strftime('%Y%m%d'))
+    return empty
 
   def SetTemps(self, avg=None, max=None, min=None):
     if avg:
@@ -61,7 +78,7 @@ class DayData:
       self.min = min
 
 def FillTempsForDayDatas(rgbs, data_file, station):
-  day_data = dict((x.date, x) for x in rgbs)
+  day_data = dict((x.date_str, x) for x in rgbs)
   for line in fileinput.input(data_file):
     if line.startswith(station):
       parts = line.split()
@@ -76,9 +93,17 @@ def FillTempsForDayDatas(rgbs, data_file, station):
       avg, max, min = float(avg), float(max), float(min)
       day.SetTemps(avg=avg, min=min, max=max)
 
+def PadDaysWithEmptys(rgbs):
+  for index in xrange(len(rgbs) - 1, 0, -1):
+    days_diff = rgbs[index].date - rgbs[index - 1].date
+    if days_diff.days > 1:
+      rgbs[index:index] = [
+        DayData.EmptyDay(rgbs[index].date + datetime.timedelta(i))
+        for i in xrange(1, days_diff.days)]
+
 class HtmlPrinter:
-  def __init__(self):
-    pass
+  def __init__(self, **options):
+    self.options = options
 
   def _Header(self):
     return '''
@@ -86,49 +111,72 @@ class HtmlPrinter:
 		<link type="text/css" href="static/app.css" rel="stylesheet" />	
     <script type="text/javascript" src="static/jquery-1.5.2.js"></script>
     <script type="text/javascript">
+      var state = 0;
       window.onload = function() {
         $('.bargraph').click(function() {
-          $(this).children('.bar').each(function() {
+          ++state;
+          state = state % 3;
+          var eachFunc = function() {
             var self = $(this);
-            state = self.attr('state')
-            if (!state) {
-              state = '0';
-            }
-            var state = parseInt(state);
-            state += 1;
-            self.attr('state', state);
             var heightElem = self.children()[state % self.children().length];
             var newHeight = $.trim($(heightElem).text()) + '%';
             $(self.children()[0]).animate({height: newHeight}, 1000);
-          });
+          };
+          $(this).children('.bar').each(eachFunc);
+          var labels = ['Average', 'Maximum', 'Minimum'];
+          $(this).children('.title').text(labels[state % 3]);
+        });
+        $('.bargraph').mousemove(function(e) {
+          var self = $(this);
+          var topOffset = self.offset().top;
+          var mouseY = 100.0 * (e.pageY - topOffset) / self.height();
+          if (mouseY > 100) {
+            mouseY = 100;
+          } else if (mouseY < 0) {
+            mouseY = 0;
+          }
+          var newLabel = 100 - mouseY;
+          var newPosition = mouseY / 100 * self.height();
+          self.find('.guide-line').css('top', newPosition + 'px');
+          var label = self.find('.guide-label');
+          label.css('top', newPosition + 'px');
+          label.html(Math.round(newLabel) + '&deg;F');
         });
       };
     </script>
   </head>'''
 
-  def _SingleBar(self, **format_data):
+  def _SingleBar(self, day_data, print_label):
+    label = ''
+    if print_label:
+      label = '<span class="label">%s</span>' % day_data.date.strftime('%Y / %m / %d')
     return '''
     <span class="bar">
       <span class="value" style="height: {height}%; background-color: {rgb}">
         {height}
       </span>
-      <span class="tick" style="height: {max}%; border-top: thin solid black;">
+      <span class="tick" style="height: {max}%;">
         {max}
       </span>
-      <span class="tick" style="height: {min}%; border-top: thin solid black;">
+      <span class="tick" style="height: {min}%;">
         {min}
       </span>
-    </span>'''.format(**format_data)
+      {label}
+    </span>'''.format(height=day_data.avg,
+                      rgb=day_data.rgb,
+                      max=day_data.max,
+                      min=day_data.min,
+                      label=label)
 
   def PrintHtml(self, rgbs, out_file=sys.stdout):
     out_file.write(self._Header())
-    out_file.write('<span class="bargraph">')
-    for day in rgbs:
-      print day.date
-      out_file.write(self._SingleBar(height=day.avg,
-                                     max=day.max,
-                                     min=day.min,
-                                     rgb=day.rgb))
+    out_file.write('<div class="bargraph">')
+    out_file.write('<div class="title">Average</div>')
+    out_file.write('<div class="guide"><div class="guide-line"></div>')
+    out_file.write('<div class="guide-label">100&deg;F</div></div>')
+    for index, day in enumerate(rgbs):
+      out_file.write(self._SingleBar(day_data=day, print_label=index % 15 == 0))
+      last_day = day.date
     out_file.write('</span>')
 
 def main(argv):
@@ -152,6 +200,7 @@ def main(argv):
                      height=int(args.height),
                      line_width=int(args.line_width))
     if args.html_output:
+      PadDaysWithEmptys(rgbs)
       with open(args.html_output, 'w') as out_file:
         printer = HtmlPrinter()
         printer.PrintHtml(rgbs, out_file=out_file)
