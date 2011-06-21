@@ -4,8 +4,9 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template 
 from google.appengine.ext.webapp import util
 
-import os
 import datetime
+import fileinput
+import os
 
 class Error(Exception):
   pass
@@ -45,6 +46,20 @@ def ImageForDay(seq, day, resized=False):
       db_value.processed_image = data
   return db_value.processed_image
 
+def OverlapForDay(seq, start, end=None):
+  ret = ''
+  files = [x.strip().split() for x in fileinput.input('offsets_%s.txt' % seq)]
+  files.sort()
+  start = 'processed_images/%s' % start
+  if end is None:
+    end = start + '~'
+  else:
+    end = 'processed_images/%s' % end
+  files = [(file, x, y) for (file, x, y) in files if start <= file < end]
+  for file, xoff, yoff in files:
+    xoff, yoff = int(xoff), int(yoff)
+    ret += '<img src="%s" style="opacity:%g; position:absolute; left: %spx; top: %spx" />\n' % (file, 1.0 / len(files), 500 - xoff / 4, 300 - yoff / 4)
+  return ret
 
 class MainHandler(webapp.RequestHandler):
   def get(self):
@@ -59,6 +74,13 @@ class UiHandler(webapp.RequestHandler):
     template_values = {}
     path = os.path.join(os.path.dirname(__file__), 'ui.html')
     self.response.out.write(template.render(path, template_values))
+
+class HtmlUiHandler(webapp.RequestHandler):
+  def get(self):
+    seq = self.request.get('seq', '1')
+    start = self.request.get('start', '20110101')
+    end = self.request.get('end', None)
+    self.response.out.write(OverlapForDay(seq, start, end))
 
 class DbImageHandler(webapp.RequestHandler):
   def __ToDate(self, line):
@@ -153,6 +175,7 @@ def main():
     ('/ui', UiHandler),
     ('/img', ImageHandler),
     ('/db_img', DbImageHandler),
+    ('/overlap', HtmlUiHandler),
   ], debug=True)
   util.run_wsgi_app(application)
 

@@ -6,5 +6,7 @@ api_version: 1
 handlers:
 - url: /static
   static_dir: static
+- url: /processed_images
+  static_dir: processed_images
 - url: /.*
   script: everyday.py
