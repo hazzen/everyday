@@ -3,7 +3,7 @@
   margin: 0; 
   padding: 0; 
   list-style-type: none;
-  font-family: 'Droid Sans', sans-serif;
+  font-family: 'Droid Sans', arial, serif;
   color: #ccc;
 }
 
@@ -15,6 +15,12 @@
 .bargraph { 
   display: table;
   margin: 200px auto;
+}
+
+img#day-img {
+  position: absolute;
+  top: 0px;
+  left: 300px;
 }
 
 .bargraph .bar { 
@@ -70,10 +76,16 @@
   z-index: 1;
 }
 
+span.small {
+  font-size: 0.5em;
+}
+
 .bargraph .guide-label {
   position: absolute;
   height: 0%;
   left: 100%;
+  top: 50px;
+  font-size: 1.5em;
   margin-top: -0.5em;
 }
 

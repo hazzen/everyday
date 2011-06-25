@@ -14,6 +14,7 @@ def get_parser():
   parser = argparse.ArgumentParser(
       description='Convert a sequence of images into a visual barcode.')
   parser.add_argument('--file_glob', dest='file_glob')
+  parser.add_argument('--offset_file', dest='offset_file')
   parser.add_argument('--output', dest='output', default='')
   parser.add_argument('--height', dest='height', default='300')
   parser.add_argument('--line_width', dest='line_width', default='3')
@@ -47,8 +48,10 @@ def make_composite(rgbs, output, height, line_width):
     run_command(cmd)
 
 class DayData:
-  def __init__(self, filename='', rgb='rgb(255, 255, 255)'):
+  def __init__(self, filename='', rgb='rgb(255, 255, 255)', xoff=0, yoff=0):
     self.rgb = rgb
+    self.xoff = xoff
+    self.yoff = yoff
     if filename:
       self.filename = filename
       self._SetDate(os.path.basename(self.filename)[:8])
@@ -109,10 +112,20 @@ class HtmlPrinter:
     return '''
   <head>
 		<link type="text/css" href="static/app.css" rel="stylesheet" />	
+    <link href='http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&v1' rel='stylesheet' type='text/css'>
     <script type="text/javascript" src="static/jquery-1.5.2.js"></script>
     <script type="text/javascript">
       var state = 0;
       window.onload = function() {
+        $('.hover').mouseover(function(e) {
+          var self = $(this);
+          var filename = self.attr('filename');
+          var xoff = self.attr('xoff');
+          var yoff = self.attr('yoff');
+          var imgElem = $('#day-img');
+          imgElem.attr('src', filename);
+          imgElem.css({'left': 700 - parseInt(xoff) / 4, 'top': 100 - parseInt(yoff) / 4});
+        });
         $('.bargraph').click(function() {
           ++state;
           state = state % 3;
@@ -139,8 +152,7 @@ class HtmlPrinter:
           var newPosition = mouseY / 100 * self.height();
           self.find('.guide-line').css('top', newPosition + 'px');
           var label = self.find('.guide-label');
-          label.css('top', newPosition + 'px');
-          label.html(Math.round(newLabel) + '&deg;F');
+          label.html(Math.round(newLabel) + '<span class="small">&deg;F</span>');
         });
       };
     </script>
@@ -150,8 +162,14 @@ class HtmlPrinter:
     label = ''
     if print_label:
       label = '<span class="label">%s</span>' % day_data.date.strftime('%Y / %m / %d')
+    extra_data = ''
+    extra_classes = ''
+    if hasattr(day_data, 'filename'):
+      extra_data = 'filename="%s" xoff="%s" yoff="%s"' % (
+        day_data.filename, day_data.xoff, day_data.yoff)
+      extra_classes = ' hover'
     return '''
-    <span class="bar">
+    <span class="bar{extra_classes}" {extra_data}>
       <span class="value" style="height: {height}%; background-color: {rgb}">
         {height}
       </span>
@@ -166,14 +184,17 @@ class HtmlPrinter:
                       rgb=day_data.rgb,
                       max=day_data.max,
                       min=day_data.min,
+                      extra_data=extra_data,
+                      extra_classes=extra_classes,
                       label=label)
 
   def PrintHtml(self, rgbs, out_file=sys.stdout):
     out_file.write(self._Header())
+    out_file.write('<img id="day-img" />')
     out_file.write('<div class="bargraph">')
     out_file.write('<div class="title">Average</div>')
     out_file.write('<div class="guide"><div class="guide-line"></div>')
-    out_file.write('<div class="guide-label">100&deg;F</div></div>')
+    out_file.write('<div class="guide-label"></div></div>')
     for index, day in enumerate(rgbs):
       out_file.write(self._SingleBar(day_data=day, print_label=index % 15 == 0))
       last_day = day.date
@@ -183,10 +204,17 @@ def main(argv):
   args = get_parser().parse_args(argv[1:])
 
   rgbs = []
-  for file in glob.iglob(args.file_glob):
+  if args.offset_file:
+    files = []
+    for line in fileinput.input(args.offset_file):
+      file_name, xoff, yoff = line.strip().split()
+      files.append((file_name, xoff, yoff))
+  else:
+    files = ((x, 0, 0) for x in glob.iglob(args.file_glob))
+  for (file, xoff, yoff) in files:
     cmd = 'convert %s -scale 1x1\! -format "%%[pixel:u]" info:-' % file
     rgb = run_command(cmd).strip()
-    rgbs.append(DayData(filename=file, rgb=rgb))
+    rgbs.append(DayData(filename=file, rgb=rgb, xoff=xoff, yoff=yoff))
   rgbs.sort(key=operator.attrgetter('date'))
   FillTempsForDayDatas(rgbs,
                        data_file=args.weather_file,
