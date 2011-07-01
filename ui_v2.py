@@ -53,11 +53,12 @@ class DayData:
       self.date = date
       self.date_str = date.strftime('%Y%m%d')
 
-  def to_json(self):
+  def to_json(self, parent):
     json_dict = {}
     json_dict['date'] = self.date_str
     json_dict['rgb'] = self.rgb
     json_dict['avg'] = self.avg
+    json_dict['parent'] = parent
     img_json = [img.to_json() for img in self.img_data]
     if img_json:
       json_dict['imgs'] = img_json
@@ -111,6 +112,29 @@ def collect(iter, key_fn):
     collected[key_fn(item)].append(item)
   return collected
 
+def rgb_parts(val):
+  return (int(x) for x in val[len('rgb('):-1].split(','))
+
+def parts_rgb(parts):
+  return 'rgb(%s)' % ','.join('%d' % x for x in parts)
+
+def add_rgb(a, b):
+  return parts_rgb(sum(x) for x in zip(rgb_parts(a), rgb_parts(b)))
+
+def div_rgb(val, div):
+  return parts_rgb(x / div for x in rgb_parts(val))
+
+
+def combine_json_data(data_map, keys, parent=None):
+  json_dict = {}
+  json_dict['children'] = keys
+  if parent:
+    json_dict['parent'] = parent
+  json_dict['rgb'] = div_rgb(
+    reduce(add_rgb, (data_map[key]['rgb'] for key in keys)),
+    len(keys))
+  json_dict['avg'] = sum(data_map[key]['avg'] for key in keys) / len(keys)
+  return json_dict
 
 def rgbs_to_json(rgbs):
   by_week = collect(rgbs, lambda x: x.date.strftime('%U'))
@@ -119,68 +143,45 @@ def rgbs_to_json(rgbs):
   for value in week_by_month.itervalues():
     value.sort(key=operator.itemgetter(0))
   sorted_months = sorted(x for x in week_by_month)
-  json = []
+  data_map = {}
   for month in sorted_months:
-    month_json = []
-    for _, week in week_by_month[month]:
-      print week
-      month_json.append([day.to_json() for day in week])
-    json.append(month_json)
-  print json
+    month_key = '%s' % month
+    data_map[month_key] = None
+    week_keys = ['%s.%s' % (month, week_num)
+                 for (week_num, _) in week_by_month[month]]
+    for week_key, (_, week_data) in zip(week_keys, week_by_month[month]):
+      day_keys = ['%s.%s' % (week_key, day.date.weekday())
+                  for day in week_data]
+      for day_key, day in zip(day_keys, week_data):
+        data_map[day_key] = day.to_json(week_key)
+      data_map[week_key] = combine_json_data(data_map, day_keys, month_key)
+      
+    data_map['%s' % month] = combine_json_data(data_map, week_keys, '*')
+  data_map['*'] = combine_json_data(data_map, sorted_months)
+  print data_map['*']
+  return data_map
 
 class HtmlPrinter:
   def __init__(self, **options):
     self.options = options
 
-  def _Header(self):
+  def _Header(self, rgbs):
     return '''
   <head>
 		<link type="text/css" href="static/app.css" rel="stylesheet" />	
     <link href='http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&v1' rel='stylesheet' type='text/css'>
     <script type="text/javascript" src="static/jquery-1.5.2.js"></script>
+    <script type="text/javascript" src="static/base.js"></script>
+    <script type="text/javascript" src="static/ui_v2.js"></script>
     <script type="text/javascript">
       var state = 0;
-      window.onload = function() {
-        $('.hover').mouseover(function(e) {
-          var self = $(this);
-          var filename = self.attr('filename');
-          var xoff = self.attr('xoff');
-          var yoff = self.attr('yoff');
-          var imgElem = $('#day-img');
-          imgElem.attr('src', filename);
-          imgElem.css({'left': 700 - parseInt(xoff) / 4, 'top': 100 - parseInt(yoff) / 4});
-        });
-        $('.bargraph').click(function() {
-          ++state;
-          state = state % 3;
-          var eachFunc = function() {
-            var self = $(this);
-            var heightElem = self.children()[state % self.children().length];
-            var newHeight = $.trim($(heightElem).text()) + '%';
-            $(self.children()[0]).animate({height: newHeight}, 1000);
-          };
-          $(this).children('.bar').each(eachFunc);
-          var labels = ['Average', 'Maximum', 'Minimum'];
-          $(this).children('.title').text(labels[state % 3]);
-        });
-        $('.bargraph').mousemove(function(e) {
-          var self = $(this);
-          var topOffset = self.offset().top;
-          var mouseY = 100.0 * (e.pageY - topOffset) / self.height();
-          if (mouseY > 100) {
-            mouseY = 100;
-          } else if (mouseY < 0) {
-            mouseY = 0;
-          }
-          var newLabel = 100 - mouseY;
-          var newPosition = mouseY / 100 * self.height();
-          self.find('.guide-line').css('top', newPosition + 'px');
-          var label = self.find('.guide-label');
-          label.html(Math.round(newLabel) + '<span class="small">&deg;F</span>');
-        });
-      };
+      window.onload = function() {{
+        var rgbs_json = {rgbs_json};
+        var maker = new GraphMaker(rgbs_json);
+        $('body').append(maker.graphForKey('*'));
+      }};
     </script>
-  </head>'''
+  </head>'''.format(rgbs_json=rgbs_to_json(rgbs))
 
   def _SingleBar(self, day_data, print_label):
     label = ''
@@ -213,7 +214,8 @@ class HtmlPrinter:
                       label=label)
 
   def PrintHtml(self, rgbs, out_file=sys.stdout):
-    out_file.write(self._Header())
+    out_file.write(self._Header(rgbs))
+    """
     out_file.write('<img id="day-img" />')
     out_file.write('<div class="bargraph">')
     out_file.write('<div class="title">Average</div>')
@@ -223,6 +225,7 @@ class HtmlPrinter:
       out_file.write(self._SingleBar(day_data=day, print_label=index % 15 == 0))
       last_day = day.date
     out_file.write('</span>')
+    """
 
 def img_to_date_str(img_file_name):
   date_str, _ = os.path.splitext(os.path.basename(img_file_name))
@@ -250,10 +253,10 @@ def main(argv):
         'Mismatched day data: %s vs %s' % (date_str, day_data.date_str))
     day_data.AddImgData(ImgData(filename=file_name, xoff=xoff, yoff=yoff))
   rgbs.sort(key=operator.attrgetter('date'))
-  rgbs_to_json(rgbs)
   FillTempsForDayDatas(rgbs,
                        data_file=args.weather_file,
                        station=args.weather_station)
+  rgbs_to_json(rgbs)
 
   if len(rgbs):
     print 'Got %d rgb values, generating composite...' % len(rgbs)
