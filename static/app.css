@@ -12,26 +12,34 @@
   height: 0px;
 }
 
-.bargraph { 
+#content {
   display: table;
-  margin: 200px auto;
+  margin: 0 auto;
+  position: relative;
+  width: 800px;
 }
 
-img#day-img {
+#graph { 
   position: absolute;
-  top: 0px;
-  left: 300px;
+  left: 200px;
+  width: 600px;
+  top: 400px;
+}
+
+.bargraph.title { 
+  display: block;
+  position: relative;
 }
 
 .bargraph .bar { 
-  width: 32px;
+  width: 60px;
   height: 200px; 
   margin-right: 8px;
   position: relative;
   float: left; 
 }
 
-.bargraph .big-bar {
+.bargraph.title .bar {
   margin-right: 48px;
   width: 64px;
 }
@@ -58,9 +66,10 @@ img#day-img {
   text-indent: -9999px;
 }
 
-.bargraph .big-bar .value {
+.bargraph.title .bar .value {
   text-indent: 0px;
 }
+
 
 .bargraph .bar .label {
   -webkit-transform: rotate(90deg);
@@ -74,6 +83,7 @@ img#day-img {
   white-space: nowrap;
   border-bottom: 1px solid #abf;
 }
+
 
 .bargraph .guide {
   position: relative;
