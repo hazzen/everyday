@@ -37,13 +37,19 @@ class ImgData:
     return {'name': self.filename, 'xoff': self.xoff, 'yoff': self.yoff}
 
 class DayData:
-  def __init__(self, rgb='rgb(255, 255, 255)', date=None):
+  def __init__(self, rgb='rgb(0,0,0)', date=None):
     self.rgb = rgb
     self._SetDate(date)
     self.avg = 0
     self.min = 0
     self.max = 0
     self.img_data = []
+
+  def __str__(self):
+    return 'DayData(%s: %s avg(%s))' % (self.date, self.rgb, self.avg)
+
+  def __repr__(self):
+    return self.__str__()
 
   def _SetDate(self, date):
     if isinstance(date, str):
@@ -88,9 +94,9 @@ def FillTempsForDayDatas(rgbs, data_file, station):
     if line.startswith(station):
       parts = line.split()
       date, avg, max, min = parts[2], parts[3], parts[17], parts[18]
-      day = day_data.get(date)
-      if not day:
+      if date not in day_data:
         continue
+      day = day_data.get(date)
       if max[-1] == '*':
         max = max[:-1]
       if min[-1] == '*':
@@ -103,7 +109,7 @@ def PadDaysWithEmptys(rgbs):
     days_diff = rgbs[index].date - rgbs[index - 1].date
     if days_diff.days > 1:
       rgbs[index:index] = [
-        DayData.EmptyDay(rgbs[index].date + datetime.timedelta(i))
+        DayData.EmptyDay(rgbs[index - 1].date + datetime.timedelta(i))
         for i in xrange(1, days_diff.days)]
 
 def collect(iter, key_fn):
@@ -132,8 +138,10 @@ def combine_json_data(data_map, keys, parent=None):
     json_dict['parent'] = parent
   json_dict['rgb'] = div_rgb(
     reduce(add_rgb, (data_map[key]['rgb'] for key in keys)),
-    len(keys))
-  json_dict['avg'] = sum(data_map[key]['avg'] for key in keys) / len(keys)
+    len([key for key in keys if data_map[key]['rgb'] != 'rgb(0,0,0)']))
+  json_dict['avg'] = (
+    sum(data_map[key]['avg'] for key in keys) /
+    len([key for key in keys if data_map[key]['avg']]))
   return json_dict
 
 def rgbs_to_json(rgbs):
@@ -158,7 +166,6 @@ def rgbs_to_json(rgbs):
       
     data_map['%s' % month] = combine_json_data(data_map, week_keys, '*')
   data_map['*'] = combine_json_data(data_map, sorted_months)
-  print data_map['*']
   return data_map
 
 class HtmlPrinter:
@@ -256,7 +263,6 @@ def main(argv):
   FillTempsForDayDatas(rgbs,
                        data_file=args.weather_file,
                        station=args.weather_station)
-  rgbs_to_json(rgbs)
 
   if len(rgbs):
     print 'Got %d rgb values, generating composite...' % len(rgbs)

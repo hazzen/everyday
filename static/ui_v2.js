@@ -13,9 +13,9 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
     $('<span class="value"/>').css(cssData).appendTo(barElem);
     if (keyData.children || opt_zoomKey) {
       var zoomKey = opt_zoomKey || key;
-      var boundGraphFn = bind(this, this.graphForKey, zoomKey)
+      var boundGraphFn = bind(this, this.graphForKey)
       barElem.click(function() {
-        var newContent = boundGraphFn();
+        var newContent = boundGraphFn(zoomKey);
         $('.bargraph').replaceWith(newContent)
       });
     }
