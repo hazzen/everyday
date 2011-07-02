@@ -65,6 +65,7 @@ class DayData:
     json_dict['rgb'] = self.rgb
     json_dict['avg'] = self.avg
     json_dict['parent'] = parent
+    json_dict['label'] = self.date_str
     img_json = [img.to_json() for img in self.img_data]
     if img_json:
       json_dict['imgs'] = img_json
@@ -105,6 +106,16 @@ def FillTempsForDayDatas(rgbs, data_file, station):
       day.SetTemps(avg=avg, min=min, max=max)
 
 def PadDaysWithEmptys(rgbs):
+  last_day = rgbs[-1]
+  if last_day.date.weekday() != 5:
+    rgbs.append(DayData.EmptyDay(
+      last_day.date + datetime.timedelta(5 - last_day.date.weekday())))
+    print rgbs[-2:]
+  first_day = rgbs[0]
+  if first_day.date.weekday() != 0:
+    rgbs.insert(0, DayData.EmptyDay(
+      first_day.date - datetime.timedelta(first_day.date.weekday())))
+    print rgbs[:2]
   for index in xrange(len(rgbs) - 1, 0, -1):
     days_diff = rgbs[index].date - rgbs[index - 1].date
     if days_diff.days > 1:
@@ -136,10 +147,11 @@ def combine_json_data(data_map, keys, parent=None):
   json_dict['children'] = keys
   if parent:
     json_dict['parent'] = parent
+  print keys
   json_dict['rgb'] = div_rgb(
     reduce(add_rgb, (data_map[key]['rgb'] for key in keys)),
     len([key for key in keys if data_map[key]['rgb'] != 'rgb(0,0,0)']))
-  json_dict['avg'] = (
+  json_dict['avg'] = int(
     sum(data_map[key]['avg'] for key in keys) /
     len([key for key in keys if data_map[key]['avg']]))
   return json_dict
@@ -157,14 +169,18 @@ def rgbs_to_json(rgbs):
     data_map[month_key] = None
     week_keys = ['%s.%s' % (month, week_num)
                  for (week_num, _) in week_by_month[month]]
-    for week_key, (_, week_data) in zip(week_keys, week_by_month[month]):
+    for week_key, (week_num, week_data) in zip(week_keys, week_by_month[month]):
       day_keys = ['%s.%s' % (week_key, day.date.weekday())
                   for day in week_data]
       for day_key, day in zip(day_keys, week_data):
         data_map[day_key] = day.to_json(week_key)
-      data_map[week_key] = combine_json_data(data_map, day_keys, month_key)
+      week_data = combine_json_data(data_map, day_keys, month_key)
+      week_data['label'] = 'Week %s' % week_num
+      data_map[week_key] = week_data
       
-    data_map['%s' % month] = combine_json_data(data_map, week_keys, '*')
+    month_data = combine_json_data(data_map, week_keys, '*')
+    month_data['label'] = datetime.datetime.strptime(month, '%m').strftime('%b')
+    data_map[month_key] = month_data
   data_map['*'] = combine_json_data(data_map, sorted_months)
   return data_map
 

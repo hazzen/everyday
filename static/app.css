@@ -24,10 +24,16 @@ img#day-img {
 }
 
 .bargraph .bar { 
-  width: 8px; 
+  width: 32px;
   height: 200px; 
+  margin-right: 8px;
   position: relative;
   float: left; 
+}
+
+.bargraph .big-bar {
+  margin-right: 48px;
+  width: 64px;
 }
 
 .bargraph .bar .tick {
@@ -40,7 +46,7 @@ img#day-img {
   width: 100%;
 }
 
-.bargraph .bar .value { 
+.bargraph .bar .value {
   display: block; 
   position: absolute; 
   bottom: 0; 
@@ -52,14 +58,19 @@ img#day-img {
   text-indent: -9999px;
 }
 
+.bargraph .big-bar .value {
+  text-indent: 0px;
+}
+
 .bargraph .bar .label {
   -webkit-transform: rotate(90deg);
+  -webkit-transform-origin: left bottom;
   -moz-transform: rotate(90deg);
+  -moz-transform-origin: left bottom;
   writing-mode: tb;
   display: block;
   position: absolute;
-  left: -2em;
-  bottom: -4em;
+  bottom: -2em;
   white-space: nowrap;
   border-bottom: 1px solid #abf;
 }
