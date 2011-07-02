@@ -34,7 +34,7 @@
 .bargraph .bar { 
   width: 60px;
   height: 200px; 
-  margin-right: 8px;
+  /*margin-right: 8px;*/
   position: relative;
   float: left; 
 }
