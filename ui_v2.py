@@ -206,49 +206,8 @@ class HtmlPrinter:
     </script>
   </head>'''.format(rgbs_json=rgbs_to_json(rgbs))
 
-  def _SingleBar(self, day_data, print_label):
-    label = ''
-    if print_label:
-      label = '<span class="label">%s</span>' % day_data.date.strftime('%Y / %m / %d')
-    extra_data = ''
-    extra_classes = ''
-    if hasattr(day_data, 'filename'):
-      extra_data = 'filename="%s" xoff="%s" yoff="%s"' % (
-        day_data.filename, day_data.xoff, day_data.yoff)
-      extra_classes = ' hover'
-    return '''
-    <span class="bar{extra_classes}" {extra_data}>
-      <span class="value" style="height: {height}%; background-color: {rgb}">
-        {height}
-      </span>
-      <span class="tick" style="height: {max}%;">
-        {max}
-      </span>
-      <span class="tick" style="height: {min}%;">
-        {min}
-      </span>
-      {label}
-    </span>'''.format(height=day_data.avg,
-                      rgb=day_data.rgb,
-                      max=day_data.max,
-                      min=day_data.min,
-                      extra_data=extra_data,
-                      extra_classes=extra_classes,
-                      label=label)
-
   def PrintHtml(self, rgbs, out_file=sys.stdout):
     out_file.write(self._Header(rgbs))
-    """
-    out_file.write('<img id="day-img" />')
-    out_file.write('<div class="bargraph">')
-    out_file.write('<div class="title">Average</div>')
-    out_file.write('<div class="guide"><div class="guide-line"></div>')
-    out_file.write('<div class="guide-label"></div></div>')
-    for index, day in enumerate(rgbs):
-      out_file.write(self._SingleBar(day_data=day, print_label=index % 15 == 0))
-      last_day = day.date
-    out_file.write('</span>')
-    """
 
 def img_to_date_str(img_file_name):
   date_str, _ = os.path.splitext(os.path.basename(img_file_name))
