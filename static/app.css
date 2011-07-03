@@ -24,6 +24,7 @@
   left: 200px;
   width: 600px;
   top: 400px;
+  height: 300px;
 }
 
 .bargraph.title { 
@@ -33,8 +34,8 @@
 
 .bargraph .bar { 
   width: 60px;
-  height: 200px; 
-  /*margin-right: 8px;*/
+  height: 300px; 
+  margin-right: 8px;
   position: relative;
   float: left; 
 }
@@ -57,7 +58,7 @@
 .bargraph .bar .value {
   display: block; 
   position: absolute; 
-  bottom: 0; 
+  bottom: 100px; 
   left: 0; 
   width: 100%; 
   height: 0; 
@@ -79,7 +80,7 @@
   writing-mode: tb;
   display: block;
   position: absolute;
-  bottom: -2em;
+  top: 200px;
   white-space: nowrap;
   border-bottom: 1px solid #abf;
 }
