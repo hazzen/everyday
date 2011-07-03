@@ -72,8 +72,10 @@
   text-indent: 0px;
 }
 
-.bargraph .bar .value:hover {
+.bargraph .bar .value:hover, .bargraph .bar.moving .value {
   text-indent: 0px;
+  cursor: pointer;
+  border-top: 3px double #bbf;
 }
 
 .bargraph .bar .label {

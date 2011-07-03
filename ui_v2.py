@@ -205,7 +205,7 @@ class HtmlPrinter:
         $('body').append(maker.graphForKey('*'));
       }};
     </script>
-  </head>'''.format(rgbs_json=rgbs_to_json(rgbs))
+  </head>\n'''.format(rgbs_json=rgbs_to_json(rgbs))
 
   def PrintHtml(self, rgbs, out_file=sys.stdout):
     out_file.write(self._Header(rgbs))

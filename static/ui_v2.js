@@ -3,19 +3,16 @@ function GraphMaker(dataJson) {
 };
 
 GraphMaker.prototype.shrinkBars = function(exclude, opt_doneFn) {
-  var counter = 0;
+  var cb = new BarrierCallback(opt_doneFn);
   $('.bar').each(function() {
     if (this != exclude) {
-      ++counter;
       var valElem = $(this).children('.value');
       var labelElem = $(this).children('.label');
       labelElem.hide();
-      valElem.animate({'height': 0}, 1000, function() {
-        --counter;
-        if (counter == 0) {
-          opt_doneFn();
-        }
-      });
+      valElem.animate({'height': 0}, 1000, cb.callback());
+    } else {
+      var valElem = $(this).children('.value');
+      valElem.animate({'height': 1}, 1000);
     }
   });
 };
@@ -30,23 +27,52 @@ GraphMaker.prototype.slideBar = function(
   barElem.animate(cssAnim, 1000, opt_doneFn);
 };
 
+GraphMaker.prototype.replaceGraph = function(newContent, key) {
+  var slideElem = null;
+  newContent.find('.bar').each(function() {
+    if ($(this).data('key') == key) {
+      slideElem = $(this);
+      slideElem.addClass('moving');
+    }
+    var valElem = $(this).children('.value');
+    valElem.css({'height': '0%'});
+  });
+
+  var cb = new BarrierCallback(function() {
+    if (slideElem) {
+      slideElem.removeClass('moving');
+    }
+  });
+
+  $('#content').replaceWith(newContent);
+  newContent.find('.bar').each(function() {
+    var targetHeight = $(this).data('height');
+    var valElem = $(this).children('.value');
+    valElem.animate({'height': targetHeight}, 1000, cb.callback());
+  });
+};
+
 GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
   var self = this;
   var barElem = $('<span class="bar" />');
   var keyData = self.data_[key];
   if (keyData) {
+    barElem.data('height', (keyData.avg - 32) * 2 + '%');
+    barElem.data('key', key);
     var cssData = {
       'background-color': keyData.rgb,
-      'height': (keyData.avg - 32) * 2 + '%'
+      'height': barElem.data('height')
     };
     $('<span class="value"/>').css(cssData).html(keyData.avg + ' &deg;F').appendTo(barElem);
     if (keyData.label) {
     $('<span class="label"/>').text(keyData.label).appendTo(barElem);
     }
-    if (keyData.parent || opt_zoomKey) {
+    if ((opt_zoomKey && keyData.parent) || 
+        (!opt_zoomKey && keyData.children)) {
       var zoomKey = opt_zoomKey || key;
       var boundGraphFn = bind(self, self.graphForKey)
       barElem.click(function() {
+        barElem.addClass('moving');
         var newContent = boundGraphFn(zoomKey);
 
         var titleElem = $('.bargraph.title .bar');
@@ -57,7 +83,7 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
           doneFn = bind(self, self.slideBar,
             barElem,
             targetLeft - curLeft,
-            function() { $('#content').replaceWith(newContent); },
+            bind(self, self.replaceGraph, newContent, key),
             titleElem.css('width'));
         } else {
           var parentData = self.data_[keyData.parent];
@@ -67,7 +93,7 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
           doneFn = bind(self, self.slideBar,
             barElem,
             targetLeft - curLeft,
-            function() { $('#content').replaceWith(newContent); },
+            bind(self, self.replaceGraph, newContent, key),
             300 / numChildren);
         }
         self.shrinkBars(barElem.get(0), doneFn);
@@ -84,8 +110,8 @@ GraphMaker.prototype.graphForKey = function(key) {
   var childElem = $('<div class="bargraph"/>');
   var keyData = this.data_[key];
   if (keyData) {
-    var parentKey = keyData.parent;
-    this.barForKey(key, parentKey, true).appendTo(titleElem);
+    var parentKey = keyData.parent || ':(';
+    this.barForKey(key, parentKey).appendTo(titleElem);
     var subKeys = keyData.children;
     var len = subKeys.length;
     for (var i = 0; i < len; ++i) {
