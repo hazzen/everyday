@@ -103,6 +103,7 @@ def FillTempsForDayDatas(rgbs, data_file, station):
       if min[-1] == '*':
         min = min[:-1]
       avg, max, min = float(avg), float(max), float(min)
+      avg, max, min = int(avg), int(max), int(min)
       day.SetTemps(avg=avg, min=min, max=max)
 
 def PadDaysWithEmptys(rgbs):

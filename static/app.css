@@ -65,12 +65,16 @@
   background: #AAA;
   overflow: hidden; 
   text-indent: -9999px;
+  text-align: center;
 }
 
 .bargraph.title .bar .value {
   text-indent: 0px;
 }
 
+.bargraph .bar .value:hover {
+  text-indent: 0px;
+}
 
 .bargraph .bar .label {
   -webkit-transform: rotate(90deg);

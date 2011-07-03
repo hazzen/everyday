@@ -48,6 +48,7 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
       var boundGraphFn = bind(self, self.graphForKey)
       barElem.click(function() {
         var newContent = boundGraphFn(zoomKey);
+
         var titleElem = $('.bargraph.title .bar');
         var curLeft = barElem.position().left;
         var targetLeft = titleElem.position().left;
