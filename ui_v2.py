@@ -188,7 +188,7 @@ def rgbs_to_json(rgbs):
   return data_map
 
 
-def generate_composite(rgbs_json, key, data, composite_dir):
+def generate_composite(rgbs_json, key, data, composite_dir, max_xoffs, max_yoffs):
   imgs = []
   explore = [data]
   while explore:
@@ -201,10 +201,6 @@ def generate_composite(rgbs_json, key, data, composite_dir):
       for child in children:
         explore.append(rgbs_json[child])
 
-  max_xoffs = [max(img[0]['xoff'] for img in imgs),
-               max(img[1]['xoff'] for img in imgs)]
-  max_yoffs = [max(img[0]['yoff'] for img in imgs),
-               max(img[1]['yoff'] for img in imgs)]
   cmds = ['convert'] * 2
 
   for img in imgs:
@@ -252,6 +248,10 @@ class HtmlPrinter:
   def PrintHtml(self, rgbs_json, out_file=sys.stdout):
     out_file.write(self._Header(rgbs_json))
 
+def strip_img_data_from_json(rgbs_json):
+  for v in rgbs_json.itervalues():
+    v.pop('imgs', '')
+
 def img_to_date_str(img_file_name):
   date_str, _ = os.path.splitext(os.path.basename(img_file_name))
   return date_str[0:8]
@@ -286,13 +286,17 @@ def main(argv):
     print 'Got %d rgb values, generating composite...' % len(rgbs)
     PadDaysWithEmptys(rgbs)
     rgbs_json = rgbs_to_json(rgbs)
-    if args.html_output:
-      with open(args.html_output, 'w') as out_file:
-        printer = HtmlPrinter()
-        printer.PrintHtml(rgbs_json, out_file=out_file)
     if args.composite_dir:
       num_done, num_to_do = 0, sum(1 for x in rgbs_json.itervalues()
                                    if x.get('children'))
+      imgs = ([img.img_data[0], img.img_data[1]] for img in rgbs
+               if img.img_data)
+      a_imgs, b_imgs = zip(*imgs)
+      max_xoffs = [max(img.xoff for img in a_imgs),
+                   max(img.xoff for img in b_imgs)]
+      max_yoffs = [max(img.yoff for img in a_imgs),
+                   max(img.yoff for img in b_imgs)]
+      print max_xoffs, max_yoffs
       for key, data in rgbs_json.iteritems():
         progress = num_done * 40 / num_to_do
         prog_str = 'Converting [%s%s] (%d / %d)' % (
@@ -300,9 +304,15 @@ def main(argv):
         print prog_str, '\r',
         sys.stdout.flush()
         if data.get('children'):
-          generate_composite(rgbs_json, key, data, args.composite_dir)
+          generate_composite(rgbs_json, key, data, args.composite_dir,
+                             max_xoffs, max_yoffs)
           num_done += 1
       print 'Done! %d composites made' % num_done
+    if args.html_output:
+      strip_img_data_from_json(rgbs_json)
+      with open(args.html_output, 'w') as out_file:
+        printer = HtmlPrinter()
+        printer.PrintHtml(rgbs_json, out_file=out_file)
 
 if __name__ == '__main__':
   main(sys.argv)

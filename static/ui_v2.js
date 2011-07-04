@@ -143,8 +143,8 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
         $('.bar').unbind();
         self.hideSubSlider_();
         self.positionSlider_($('#guide-graph-slider'), zoomKey);
-        $('#img1').attr('src', 'composites/1' + key + '.jpg');
-        $('#img0').attr('src', 'composites/0' + key + '.jpg');
+        $('#img1').attr('src', 'composites/1' + zoomKey + '.jpg');
+        $('#img0').attr('src', 'composites/0' + zoomKey + '.jpg');
         barElem.addClass('moving');
         var newContent = boundGraphFn(zoomKey);
 
