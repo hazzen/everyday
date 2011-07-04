@@ -166,12 +166,12 @@ def rgbs_to_json(rgbs):
   sorted_months = sorted(x for x in week_by_month)
   data_map = {}
   for month in sorted_months:
-    month_key = '%s' % month
+    month_key = 'm%s' % month
     data_map[month_key] = None
-    week_keys = ['%s.%s' % (month, week_num)
+    week_keys = ['%sw%s' % (month, week_num)
                  for (week_num, _) in week_by_month[month]]
     for week_key, (week_num, week_data) in zip(week_keys, week_by_month[month]):
-      day_keys = ['%s.%s' % (week_key, day.date.weekday())
+      day_keys = ['%sd%s' % (week_key, day.date.weekday())
                   for day in week_data]
       for day_key, day in zip(day_keys, week_data):
         data_map[day_key] = day.to_json(week_key)
@@ -182,7 +182,8 @@ def rgbs_to_json(rgbs):
     month_data = combine_json_data(data_map, week_keys, '*')
     month_data['label'] = datetime.datetime.strptime(month, '%m').strftime('%b')
     data_map[month_key] = month_data
-  data_map['*'] = combine_json_data(data_map, sorted_months)
+  data_map['*'] = combine_json_data(data_map,
+                                    ['m%s' % m for m in sorted_months])
   return data_map
 
 class HtmlPrinter:
@@ -202,10 +203,12 @@ class HtmlPrinter:
       window.onload = function() {{
         var rgbs_json = {rgbs_json};
         var maker = new GraphMaker(rgbs_json);
-        $('body').append(maker.graphForKey('*'));
+        $('#content').append(maker.graphForKey('*'));
+        $('#content').append(maker.makeGuideBars());
       }};
     </script>
-  </head>\n'''.format(rgbs_json=rgbs_to_json(rgbs))
+  </head>
+  <div id="content"></div>\n'''.format(rgbs_json=rgbs_to_json(rgbs))
 
   def PrintHtml(self, rgbs, out_file=sys.stdout):
     out_file.write(self._Header(rgbs))

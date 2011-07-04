@@ -27,13 +27,19 @@
   height: 300px;
 }
 
+#guide-graph {
+  position: relative;
+  display: table;
+  margin: 0 auto;
+  top: 700px;
+}
+
 .bargraph.title { 
   display: block;
   position: relative;
 }
 
 .bargraph .bar { 
-  width: 60px;
   height: 300px; 
   margin-right: 8px;
   position: relative;
@@ -55,7 +61,7 @@
   width: 100%;
 }
 
-.bargraph .bar .value {
+.bar .value {
   display: block; 
   position: absolute; 
   bottom: 100px; 
@@ -91,57 +97,38 @@
   border-bottom: 1px solid #abf;
 }
 
-
-.bargraph .guide {
+.mini-bargraph .bar {
+  width: 4px;
+  height: 100px;
   position: relative;
+  float: left;
 }
 
-.bargraph .guide-line {
+.mini-bargraph .bar .value {
+  bottom: 0;
+}
+
+#guide-graph-slider {
   position: absolute;
+  height: 100%;
   width: 100%;
-  top: 0%;
-  border-bottom: 1px solid black;
-  z-index: 1;
+  background: #445;
+  z-index: -2;
+}
+
+#guide-graph-sub-slider {
+  position: absolute;
+  float: left;
+  height: 100%;
+  top: 0px;
+  background: #667;
+  z-index: -1;
+  border-left: 1px dashed #88f;
+  border-right: 1px dashed #88f;
 }
 
 span.small {
   font-size: 0.5em;
-}
-
-.bargraph .guide-label {
-  position: absolute;
-  height: 0%;
-  left: 100%;
-  top: 50px;
-  font-size: 1.5em;
-  margin-top: -0.5em;
-}
-
-.slider-handle {
-  display: inline-block;
-  width: 20px;
-  height: 10px;
-  margin-left: -10px;
-  background: gray;
-  position: absolute;
-}
-
-.slider-tick {
-  display: inline-block;
-  position: absolute;
-  width: 2px;
-  margin-left: -1px;
-  margin-top: -2px;
-  height: 14px;
-  background: #559;
-}
-
-.slider {
-  position: relative;
-  left: 20%;
-  width: 60%;
-  height: 10px;
-  background: #555;
 }
 
 body {
