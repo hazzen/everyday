@@ -239,11 +239,14 @@ class HtmlPrinter:
       window.onload = function() {{
         var rgbs_json = {rgbs_json};
         var maker = new GraphMaker(rgbs_json);
+        $('#imgs').append($('<img id="img1" src="composites/1root.jpg"/>'));
+        $('#imgs').append($('<img id="img0" src="composites/0root.jpg"/>'));
         $('#content').append(maker.graphForKey('root'));
         $('#content').append(maker.makeGuideBars());
       }};
     </script>
   </head>
+  <div id="imgs"></div>
   <div id="content"></div>\n'''.format(rgbs_json=rgbs_json)
 
   def PrintHtml(self, rgbs_json, out_file=sys.stdout):

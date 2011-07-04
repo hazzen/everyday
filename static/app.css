@@ -7,9 +7,22 @@
   color: #ccc;
 }
 
+#img1 {
+  float: left;
+}
+
+#img0 {
+  float: left;
+}
+
 .title {
   text-align: center;
   height: 0px;
+}
+
+#imgs {
+  margin: 0 auto;
+  width: 1280px;
 }
 
 #content {
@@ -23,7 +36,6 @@
   position: absolute;
   left: 200px;
   width: 600px;
-  top: 400px;
   height: 300px;
 }
 
@@ -31,7 +43,7 @@
   position: relative;
   display: table;
   margin: 0 auto;
-  top: 700px;
+  top: 300px;
 }
 
 .bargraph.title {
