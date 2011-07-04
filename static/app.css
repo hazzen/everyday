@@ -117,6 +117,7 @@
 }
 
 #guide-graph-sub-slider {
+  display: none;
   position: absolute;
   float: left;
   height: 100%;
