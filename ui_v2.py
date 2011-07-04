@@ -239,6 +239,7 @@ class HtmlPrinter:
         $('#imgs').append($('<img id="img0" src="composites/0root.jpg"/>'));
         $('#content').append(maker.graphForKey('root'));
         $('#content').append(maker.makeGuideBars());
+        maker.resizePage();
       }};
     </script>
   </head>

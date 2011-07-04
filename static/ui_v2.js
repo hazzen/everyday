@@ -1,5 +1,12 @@
+if (typeof(GLOBALS) == 'undefined') {
+  GLOBALS = {};
+}
+GLOBALS.animateTime = 600;
+
 function GraphMaker(dataJson) {
   this.data_ = dataJson;
+
+  $(window).resize(bind(this, this.resizePage));
 };
 
 GraphMaker.prototype.baseBarFor_ = function(key, opt_valueText) {
@@ -78,10 +85,10 @@ GraphMaker.prototype.shrinkBars = function(exclude, opt_doneFn) {
       var valElem = $(this).children('.value');
       var labelElem = $(this).children('.label');
       labelElem.hide();
-      valElem.animate({'height': 0}, 1000, cb.callback());
+      valElem.animate({'height': 0}, GLOBALS.animateTime, cb.callback());
     } else {
       var valElem = $(this).children('.value');
-      valElem.animate({'height': 1}, 1000);
+      valElem.animate({'height': 1}, GLOBALS.animateTime);
     }
   });
 };
@@ -93,7 +100,7 @@ GraphMaker.prototype.slideBar = function(
   if (opt_newWidth) {
     cssAnim['width'] = opt_newWidth;
   }
-  barElem.animate(cssAnim, 1000, opt_doneFn);
+  barElem.animate(cssAnim, 2 * GLOBALS.animateTime, 'swing', opt_doneFn);
 };
 
 GraphMaker.prototype.replaceGraph = function(newContent, key) {
@@ -117,8 +124,11 @@ GraphMaker.prototype.replaceGraph = function(newContent, key) {
   newContent.find('.bargraph .bar').each(function() {
     var targetHeight = $(this).data('height');
     var valElem = $(this).children('.value');
-    valElem.animate({'height': targetHeight}, 1000, cb.callback());
+    valElem.animate({'height': targetHeight}, GLOBALS.animateTime, cb.callback());
   });
+  $('#img1').attr('src', 'composites/1' + key + '.jpg');
+  $('#img0').attr('src', 'composites/0' + key + '.jpg');
+  $('#img0, #img1').animate({'height': '100%'}, GLOBALS.animateTime);
 };
 
 GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
@@ -143,8 +153,7 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
         $('.bar').unbind();
         self.hideSubSlider_();
         self.positionSlider_($('#guide-graph-slider'), zoomKey);
-        $('#img1').attr('src', 'composites/1' + zoomKey + '.jpg');
-        $('#img0').attr('src', 'composites/0' + zoomKey + '.jpg');
+        $('#img0, #img1').animate({'height': 0}, GLOBALS.animateTime);
         barElem.addClass('moving');
         var newContent = boundGraphFn(zoomKey);
 
@@ -195,4 +204,24 @@ GraphMaker.prototype.graphForKey = function(key) {
   titleElem.appendTo(graphElem);
   childElem.appendTo(graphElem);
   return graphElem;
+};
+
+GraphMaker.prototype.resizePage = function() {
+  var heightPadding = 360;
+  var brackets = [
+    {'reqWidth': 1280, 'reqHeight': 480},
+    {'reqWidth': 800,  'reqHeight': 300},
+    {'reqWidth': 620,  'reqHeight': 240},
+  ];
+  var width = $(window).width();
+  var height = $(window).height();
+  var bracketsLength = brackets.length;
+  for (var i = 0; i < bracketsLength; ++i) {
+    if (i == bracketsLength - 1 || (width >= brackets[i].reqWidth &&
+                                    height >= brackets[i].reqHeight + heightPadding)) {
+      $('#img0, #img1').width(brackets[i].reqWidth / 2);
+      $('#imgs').width(brackets[i].reqWidth).height(brackets[i].reqHeight);
+      break;
+    }
+  }
 };
