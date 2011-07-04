@@ -59,7 +59,7 @@ GraphMaker.prototype.hideSubSlider_ = function(key) {
 };
 
 GraphMaker.prototype.makeGuideBars = function() {
-  var allElems = this.makeGuideBarsRecurse_('*');
+  var allElems = this.makeGuideBarsRecurse_('root');
   var graphElem = $('<div class="mini-bargraph"/>');
   var topLevelElem = $('<div id="guide-graph"/>');
   $.each(allElems, function(index, value) { value.appendTo(graphElem); });

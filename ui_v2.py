@@ -21,7 +21,8 @@ def get_parser():
   parser.add_argument('--weather_station',
                       dest='weather_station',
                       default='998011')
-  parser.add_argument('--html_output', dest='html_output', default='')
+  parser.add_argument('--html_output', dest='html_output')
+  parser.add_argument('--composite_image_dir', dest='composite_dir')
   return parser
 
 def run_command(cmd):
@@ -30,8 +31,8 @@ def run_command(cmd):
 class ImgData:
   def __init__(self, filename='', xoff=0, yoff=0):
     self.filename = filename
-    self.xoff = xoff
-    self.yoff = yoff
+    self.xoff = int(xoff)
+    self.yoff = int(yoff)
 
   def to_json(self):
     return {'name': self.filename, 'xoff': self.xoff, 'yoff': self.yoff}
@@ -168,7 +169,7 @@ def rgbs_to_json(rgbs):
   for month in sorted_months:
     month_key = 'm%s' % month
     data_map[month_key] = None
-    week_keys = ['%sw%s' % (month, week_num)
+    week_keys = ['%sw%s' % (month_key, week_num)
                  for (week_num, _) in week_by_month[month]]
     for week_key, (week_num, week_data) in zip(week_keys, week_by_month[month]):
       day_keys = ['%sd%s' % (week_key, day.date.weekday())
@@ -179,18 +180,53 @@ def rgbs_to_json(rgbs):
       week_data['label'] = 'Week %s' % week_num
       data_map[week_key] = week_data
 
-    month_data = combine_json_data(data_map, week_keys, '*')
+    month_data = combine_json_data(data_map, week_keys, 'root')
     month_data['label'] = datetime.datetime.strptime(month, '%m').strftime('%b')
     data_map[month_key] = month_data
-  data_map['*'] = combine_json_data(data_map,
-                                    ['m%s' % m for m in sorted_months])
+  data_map['root'] = combine_json_data(data_map,
+                                       ['m%s' % m for m in sorted_months])
   return data_map
+
+
+def generate_composite(rgbs_json, key, data, composite_dir):
+  imgs = []
+  explore = [data]
+  while explore:
+    data = explore.pop()
+    data_imgs = data.get('imgs')
+    if data_imgs:
+      imgs.append(data_imgs)
+    else:
+      children = data.get('children', [])
+      for child in children:
+        explore.append(rgbs_json[child])
+
+  max_xoffs = [max(img[0]['xoff'] for img in imgs),
+               max(img[1]['xoff'] for img in imgs)]
+  max_yoffs = [max(img[0]['yoff'] for img in imgs),
+               max(img[1]['yoff'] for img in imgs)]
+  cmds = ['convert'] * 2
+
+  for img in imgs:
+    for index, sub_img in enumerate(img):
+      cmd_part = ' \( %s -distort SRT "0,0 1,1 0 %d,%d" \)' % (
+        sub_img['name'],
+        (max_xoffs[index] - sub_img['xoff']) / 4,
+        (max_yoffs[index] - sub_img['yoff']) / 4)
+      cmds[index] = cmds[index] + cmd_part
+  for index, cmd in enumerate(cmds):
+    cmd = '%s -average %s/%d%s.jpg' % (
+      cmd,
+      composite_dir,
+      index,
+      key)
+    run_command(cmd)
 
 class HtmlPrinter:
   def __init__(self, **options):
     self.options = options
 
-  def _Header(self, rgbs):
+  def _Header(self, rgbs_json):
     return '''
   <head>
     <link type="text/css" href="static/app.css" rel="stylesheet" />
@@ -203,15 +239,15 @@ class HtmlPrinter:
       window.onload = function() {{
         var rgbs_json = {rgbs_json};
         var maker = new GraphMaker(rgbs_json);
-        $('#content').append(maker.graphForKey('*'));
+        $('#content').append(maker.graphForKey('root'));
         $('#content').append(maker.makeGuideBars());
       }};
     </script>
   </head>
-  <div id="content"></div>\n'''.format(rgbs_json=rgbs_to_json(rgbs))
+  <div id="content"></div>\n'''.format(rgbs_json=rgbs_json)
 
-  def PrintHtml(self, rgbs, out_file=sys.stdout):
-    out_file.write(self._Header(rgbs))
+  def PrintHtml(self, rgbs_json, out_file=sys.stdout):
+    out_file.write(self._Header(rgbs_json))
 
 def img_to_date_str(img_file_name):
   date_str, _ = os.path.splitext(os.path.basename(img_file_name))
@@ -245,11 +281,25 @@ def main(argv):
 
   if len(rgbs):
     print 'Got %d rgb values, generating composite...' % len(rgbs)
+    PadDaysWithEmptys(rgbs)
+    rgbs_json = rgbs_to_json(rgbs)
     if args.html_output:
-      PadDaysWithEmptys(rgbs)
       with open(args.html_output, 'w') as out_file:
         printer = HtmlPrinter()
-        printer.PrintHtml(rgbs, out_file=out_file)
+        printer.PrintHtml(rgbs_json, out_file=out_file)
+    if args.composite_dir:
+      num_done, num_to_do = 0, sum(1 for x in rgbs_json.itervalues()
+                                   if x.get('children'))
+      for key, data in rgbs_json.iteritems():
+        progress = num_done * 40 / num_to_do
+        prog_str = 'Converting [%s%s] (%d / %d)' % (
+          '=' * progress, ' ' * (40 - progress), num_done, num_to_do)
+        print prog_str, '\r',
+        sys.stdout.flush()
+        if data.get('children'):
+          generate_composite(rgbs_json, key, data, args.composite_dir)
+          num_done += 1
+      print 'Done! %d composites made' % num_done
 
 if __name__ == '__main__':
   main(sys.argv)
