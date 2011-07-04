@@ -111,7 +111,7 @@ class HtmlPrinter:
   def _Header(self):
     return '''
   <head>
-		<link type="text/css" href="static/app.css" rel="stylesheet" />	
+    <link type="text/css" href="static/app.css" rel="stylesheet" />
     <link href='http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&v1' rel='stylesheet' type='text/css'>
     <script type="text/javascript" src="static/jquery-1.5.2.js"></script>
     <script type="text/javascript">

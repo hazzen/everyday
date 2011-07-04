@@ -129,7 +129,7 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
     if (keyData.label) {
       $('<span class="label"/>').text(keyData.label).appendTo(barElem);
     }
-    if ((opt_zoomKey && keyData.parent) || 
+    if ((opt_zoomKey && keyData.parent) ||
         (!opt_zoomKey && keyData.children)) {
       var zoomKey = opt_zoomKey || key;
       var boundGraphFn = bind(self, self.graphForKey)

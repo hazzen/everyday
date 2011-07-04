@@ -178,7 +178,7 @@ def rgbs_to_json(rgbs):
       week_data = combine_json_data(data_map, day_keys, month_key)
       week_data['label'] = 'Week %s' % week_num
       data_map[week_key] = week_data
-      
+
     month_data = combine_json_data(data_map, week_keys, '*')
     month_data['label'] = datetime.datetime.strptime(month, '%m').strftime('%b')
     data_map[month_key] = month_data
@@ -193,7 +193,7 @@ class HtmlPrinter:
   def _Header(self, rgbs):
     return '''
   <head>
-		<link type="text/css" href="static/app.css" rel="stylesheet" />	
+    <link type="text/css" href="static/app.css" rel="stylesheet" />
     <link href='http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&v1' rel='stylesheet' type='text/css'>
     <script type="text/javascript" src="static/jquery-1.5.2.js"></script>
     <script type="text/javascript" src="static/base.js"></script>
