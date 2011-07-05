@@ -153,6 +153,15 @@ GraphMaker.prototype.slideBar = function(
   barElem.animate(cssAnim, GLOBALS.animateTime, 'swing', opt_doneFn);
 };
 
+function makeImage(id, name) {
+  var elem = $('<img />', {
+    id: 'img' + id,
+    src: 'composites/' + id + name + '.jpg'
+  }).css({opacity: 0});
+  elem.attr('onload', function() { elem.animate({opacity: 1}); });
+  return elem;
+};
+
 GraphMaker.prototype.replaceGraph = function(newContent, key) {
   var slideElem = null;
   newContent.find('.bargraph .bar').each(function() {
@@ -178,12 +187,8 @@ GraphMaker.prototype.replaceGraph = function(newContent, key) {
     var valElem = $(this).children('.value');
     valElem.animate({'height': targetHeight}, GLOBALS.animateTime, cb.callback());
   });
-  var makeOpaque = function(selector) {
-    var cssAnim = {'opacity': 1};
-    return function() { $(selector).animate(cssAnim); };
-  };
-  $('#img1').attr('onload', makeOpaque('#img1')).attr('src', 'composites/1' + key + '.jpg');
-  $('#img0').attr('onload', makeOpaque('#img0')).attr('src', 'composites/0' + key + '.jpg');
+  $('#img1').replaceWith(makeImage('1', key));
+  $('#img0').replaceWith(makeImage('0', key));
 };
 
 GraphMaker.prototype.onBarClick_ = function(key, zoomKey, opt_barElem) {
