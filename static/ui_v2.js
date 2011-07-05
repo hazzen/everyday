@@ -105,7 +105,7 @@ GraphMaker.prototype.slideBar = function(
   if (opt_newWidth) {
     cssAnim['width'] = opt_newWidth;
   }
-  barElem.animate(cssAnim, 2 * GLOBALS.animateTime, 'swing', opt_doneFn);
+  barElem.animate(cssAnim, GLOBALS.animateTime, 'swing', opt_doneFn);
 };
 
 GraphMaker.prototype.replaceGraph = function(newContent, key) {
