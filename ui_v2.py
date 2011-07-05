@@ -227,7 +227,7 @@ class HtmlPrinter:
   <head>
     <link type="text/css" href="static/app.css" rel="stylesheet" />
     <link href='http://fonts.googleapis.com/css?family=Droid+Sans:regular,bold&v1' rel='stylesheet' type='text/css'>
-    <script type="text/javascript" src="static/jquery-1.5.2.js"></script>
+    <script type="text/javascript" src="static/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="static/base.js"></script>
     <script type="text/javascript" src="static/ui_v2.js"></script>
     <script type="text/javascript">
@@ -240,14 +240,89 @@ class HtmlPrinter:
         $('#content').append(maker.graphForKey('root'));
         $('#content').append(maker.makeGuideBars());
         maker.resizePage();
+        initPage();
       }};
     </script>
-  </head>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-24357809-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+  </head>\n'''.format(rgbs_json=rgbs_json)
+
+  def _Body(self, rgbs_json):
+    return '''
+  <div id="button-strip">
+    <div class="button" id="about-button">about</div>
+    <div class="button">
+      <a href='https://github.com/hazzen/everyday'><span></span>code</a>
+    </div>
+    <div class="button">
+      <a href='http://www.hazzens.com'><span></span>home</a>
+    </div>
+  </div>
+  <div id="about">
+    <span class="content">
+    <p>
+    At some point last year, a friend convinced me that I should make it a
+    goal to launch something, outside of work, before the end of the year.
+    I had a few projects I hacked on in my spare time - some video game
+    prototypes, a few that I could even play (though not, quite, enjoy). I
+    thought it would be easy.
+    </p>
+    <p>
+    I failed miserably.
+    </p>
+    <p>
+    I decided, at the end of the year, that I would do better in the next. I
+    would mount a spare android device in the window of my office. I would
+    write an android app to take a photo at preset times and upload the results
+    to S3, and I would do it during the two semi-vacation weeks I had for the
+    holidays. I was thinking big.
+    </p>
+    <p>
+    I failed.
+    </p>
+    <p>
+    But I did start taking a photo, each day, as I went to lunch. The photo
+    collection grew without me having a clear idea of what to do with it, other
+    than "something on the internet". I played around with a lot of ideas,
+    some of which you can find skeletons of in the
+    <a href='https://github.com/hazzen/everyday'>git repo</a>. I threw a lot
+    of it out. I didn't like the UI; hosting all the images wasn't feasible;
+    it wasn't obvious what it did. But I kept at it.
+    </p>
+    <p>
+    I made something.
+    </p>
+    <p>
+    And here it is. Six months of photos, taken every day at lunch that I was
+    in the office and remembered. Which was most days, but I wasn't entirely
+    dilligent. Most photos were taken around 1230; the sound of the camera on
+    the cell phone became a lunch bell for my coworkers. I've matched it up to
+    some temperature data, which probably isn't for the office but seemed close
+    enough. SF weather is variable enough that it is probably +/- 5 degrees
+    off. And all the photos are automatically color corrected, so the color of
+    the bars, taken from the average color of each photo, isn't necessarily
+    correct. But, hey. I made something.
+    </p>
+    <p>
+    And here it is.
+    </p>
+    </span>
+  </div>
   <div id="imgs"></div>
-  <div id="content"></div>\n'''.format(rgbs_json=rgbs_json)
+  <div id="content"></div>\n'''
 
   def PrintHtml(self, rgbs_json, out_file=sys.stdout):
     out_file.write(self._Header(rgbs_json))
+    out_file.write(self._Body(rgbs_json))
 
 def strip_img_data_from_json(rgbs_json):
   for v in rgbs_json.itervalues():

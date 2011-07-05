@@ -1,3 +1,8 @@
+function initPage() {
+  $('#about').click(function() { $(this).toggle('slow'); });
+  $('#about-button').click(function() { $('#about').toggle('slow'); });
+}
+
 if (typeof(GLOBALS) == 'undefined') {
   GLOBALS = {};
 }
