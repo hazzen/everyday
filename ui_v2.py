@@ -180,11 +180,11 @@ def rgbs_to_json(rgbs):
       week_data['label'] = 'Week %s' % week_num
       data_map[week_key] = week_data
 
-    month_data = combine_json_data(data_map, week_keys, 'root')
+    month_data = combine_json_data(data_map, week_keys, 'r')
     month_data['label'] = datetime.datetime.strptime(month, '%m').strftime('%b')
     data_map[month_key] = month_data
-  data_map['root'] = combine_json_data(data_map,
-                                       ['m%s' % m for m in sorted_months])
+  data_map['r'] = combine_json_data(data_map,
+                                    ['m%s' % m for m in sorted_months])
   return data_map
 
 
@@ -235,9 +235,9 @@ class HtmlPrinter:
       window.onload = function() {{
         var rgbs_json = {rgbs_json};
         var maker = new GraphMaker(rgbs_json);
-        $('#imgs').append($('<img id="img1" src="composites/1root.jpg"/>'));
-        $('#imgs').append($('<img id="img0" src="composites/0root.jpg"/>'));
-        $('#content').append(maker.graphForKey('root'));
+        $('#imgs').append($('<img id="img1" src="composites/1r.jpg"/>'));
+        $('#imgs').append($('<img id="img0" src="composites/0r.jpg"/>'));
+        $('#content').append(maker.graphForKey('r'));
         $('#content').append(maker.makeGuideBars());
         maker.resizePage();
         initPage();

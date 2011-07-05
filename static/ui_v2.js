@@ -10,6 +10,9 @@ GLOBALS.animateTime = 600;
 
 function GraphMaker(dataJson) {
   this.data_ = dataJson;
+  this.curKey_ = null;
+  this.ignoreClicks_ = false;
+  this.lastShownSlider_ = null;;
 
   $(window).resize(bind(this, this.resizePage));
 };
@@ -46,32 +49,70 @@ GraphMaker.prototype.makeGuideBarsRecurse_ = function(key) {
     var lastAttr = joined[joined.length - 1].attr('hlk') || '';
     joined[joined.length - 1].attr('hlk', lastAttr + ' ' + key);
   } else {
-    joined.push(self.baseBarFor_(key));
+    joined.push(this.baseBarFor_(key));
   }
   return joined;
 };
 
-GraphMaker.prototype.positionSlider_ = function(sliderElem, key) {
+GraphMaker.prototype.sliderGoalposts_ = function(key, opt_offset) {
   var goalposts = $('.mini-bargraph .bar[hlk*="' + key + '"]');
-  var left = goalposts.first().position().left;
-  var right = goalposts.last().position().left + goalposts.width();
-  sliderElem.css('left', left);
-  sliderElem.css('width', right - left);
+  var leftElem = goalposts.first();
+  var rightElem = goalposts.first();
+  if (opt_offset) {
+    return {'left': goalposts.first().offset().left,
+            'right': goalposts.last().offset().left + goalposts.width()};
+  } else {
+    return {'left': goalposts.first().position().left,
+            'right': goalposts.last().position().left + goalposts.width()};
+  }
+};
+
+GraphMaker.prototype.positionSlider_ = function(sliderElem, key) {
+  var goalposts = this.sliderGoalposts_(key);
+  sliderElem.css('left', goalposts.left);
+  sliderElem.css('width', goalposts.right - goalposts.left);
 };
 
 GraphMaker.prototype.showSubSlider_ = function(key) {
   var subSliderElem = $('#guide-graph-sub-slider');
   subSliderElem.show();
   this.positionSlider_(subSliderElem, key);
+  this.lastShownSlider_ = key;
 };
 
-GraphMaker.prototype.hideSubSlider_ = function(key) {
+GraphMaker.prototype.hideSubSlider_ = function() {
   var subSliderElem = $('#guide-graph-sub-slider');
   subSliderElem.hide();
 };
 
+GraphMaker.prototype.guideBarsMouseMove_ = function(event, opt_key, opt_noUp) {
+  var key = opt_key || this.curKey_;
+  var data = this.data_[key];
+  if (data && data.children) {
+    var curGoals = this.sliderGoalposts_(key, true);
+    if (event.pageX >= curGoals.left && event.pageX <= curGoals.right) {
+      if (opt_key) {
+        this.showSubSlider_(key);
+      } else {
+        var self = this;
+        $.each(data.children, function (index, value) {
+            self.guideBarsMouseMove_(event, value, true);
+        });
+      }
+    } else if (data.parent && !opt_noUp) {
+      this.guideBarsMouseMove_(event, data.parent);
+    }
+  }
+}
+
+GraphMaker.prototype.onGuideBarsClick_ = function() {
+  if (this.lastShownSlider_) {
+    this.onBarClick_(this.lastShownSlider_, this.lastShownSlider_);
+  }
+};
+
 GraphMaker.prototype.makeGuideBars = function() {
-  var allElems = this.makeGuideBarsRecurse_('root');
+  var allElems = this.makeGuideBarsRecurse_('r');
   var graphElem = $('<div class="mini-bargraph"/>');
   var topLevelElem = $('<div id="guide-graph"/>');
   $.each(allElems, function(index, value) { value.appendTo(graphElem); });
@@ -80,13 +121,17 @@ GraphMaker.prototype.makeGuideBars = function() {
   $('<div id="guide-graph-slider"/>').appendTo(topLevelElem);
   $('<div id="guide-graph-sub-slider"/>').appendTo(topLevelElem);
 
+  graphElem.click(bind(this, this.onGuideBarsClick_));
+  graphElem.mousemove(bind(this, this.guideBarsMouseMove_));
+  graphElem.mouseleave(bind(this, this.hideSubSlider_));
+
   return topLevelElem;
 };
 
-GraphMaker.prototype.shrinkBars = function(exclude, opt_doneFn) {
+GraphMaker.prototype.shrinkBars = function(opt_exclude, opt_doneFn) {
   var cb = new BarrierCallback(opt_doneFn);
   $('.bargraph .bar').each(function() {
-    if (this != exclude) {
+    if (opt_exclude == null || this != opt_exclude.get(0)) {
       var valElem = $(this).children('.value');
       var labelElem = $(this).children('.label');
       labelElem.hide();
@@ -119,10 +164,12 @@ GraphMaker.prototype.replaceGraph = function(newContent, key) {
     valElem.css({'height': '0%'});
   });
 
+  var self = this;
   var cb = new BarrierCallback(function() {
     if (slideElem) {
       slideElem.removeClass('moving');
     }
+    self.ignoreClicks_ = false;
   });
 
   $('#graph').replaceWith(newContent);
@@ -136,10 +183,49 @@ GraphMaker.prototype.replaceGraph = function(newContent, key) {
   $('#img0, #img1').animate({'height': '100%'}, GLOBALS.animateTime);
 };
 
+GraphMaker.prototype.onBarClick_ = function(key, zoomKey, opt_barElem) {
+  if (this.ignoreClicks_) { return; }
+  var keyData = this.data_[key];
+  this.ignoreClicks_ = true;
+  $('.bar').unbind();
+  this.hideSubSlider_();
+  this.positionSlider_($('#guide-graph-slider'), zoomKey);
+  $('#img0, #img1').animate({'height': 0}, GLOBALS.animateTime);
+
+  var newContent = this.graphForKey(zoomKey);
+
+  var doneFn = null;
+  if (opt_barElem) {
+    opt_barElem.addClass('moving');
+    var titleElem = $('.bargraph.title .bar');
+    var curLeft = opt_barElem.position().left;
+    var targetLeft = titleElem.position().left;
+    if (curLeft != targetLeft) {
+      doneFn = bind(this, this.slideBar,
+        opt_barElem,
+        targetLeft - curLeft,
+        bind(this, this.replaceGraph, newContent, key),
+        titleElem.css('width'));
+    } else {
+      var parentData = this.data_[keyData.parent];
+      var childIndex = $.inArray(key, parentData.children);
+      var numChildren = parentData.children.length;
+      targetLeft = opt_barElem.outerWidth(true) + (8 + 300 / numChildren) * childIndex;
+      doneFn = bind(this, this.slideBar,
+        opt_barElem,
+        targetLeft - curLeft,
+        bind(this, this.replaceGraph, newContent, key),
+        300 / numChildren);
+    }
+  } else {
+    doneFn = bind(this, this.replaceGraph, newContent, key);
+  }
+  this.shrinkBars(opt_barElem, doneFn);
+};
+
 GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
-  var self = this;
-  var barElem = self.baseBarFor_(key, true);
-  var keyData = self.data_[key];
+  var barElem = this.baseBarFor_(key, true);
+  var keyData = this.data_[key];
   if (keyData) {
     if (keyData.label) {
       $('<span class="label"/>').text(keyData.label).appendTo(barElem);
@@ -147,51 +233,17 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
     if ((opt_zoomKey && keyData.parent) ||
         (!opt_zoomKey && keyData.children)) {
       var zoomKey = opt_zoomKey || key;
-      var boundGraphFn = bind(self, self.graphForKey)
-      barElem.mouseover(function() {
-        self.showSubSlider_(zoomKey);
-      });
-      barElem.mouseout(function() {
-        self.hideSubSlider_();
-      });
+      barElem.mouseover(bind(this, this.showSubSlider_, zoomKey));
+      barElem.mouseout(bind(this, this.hideSubSlider_));
       barElem.css({'cursor': 'pointer'});
-      barElem.click(function() {
-        $('.bar').unbind();
-        self.hideSubSlider_();
-        self.positionSlider_($('#guide-graph-slider'), zoomKey);
-        $('#img0, #img1').animate({'height': 0}, GLOBALS.animateTime);
-        barElem.addClass('moving');
-        var newContent = boundGraphFn(zoomKey);
-
-        var titleElem = $('.bargraph.title .bar');
-        var curLeft = barElem.position().left;
-        var targetLeft = titleElem.position().left;
-        var doneFn = null;
-        if (curLeft != targetLeft) {
-          doneFn = bind(self, self.slideBar,
-            barElem,
-            targetLeft - curLeft,
-            bind(self, self.replaceGraph, newContent, key),
-            titleElem.css('width'));
-        } else {
-          var parentData = self.data_[keyData.parent];
-          var childIndex = $.inArray(key, parentData.children);
-          var numChildren = parentData.children.length;
-          targetLeft = barElem.outerWidth(true) + (8 + 300 / numChildren) * childIndex;
-          doneFn = bind(self, self.slideBar,
-            barElem,
-            targetLeft - curLeft,
-            bind(self, self.replaceGraph, newContent, key),
-            300 / numChildren);
-        }
-        self.shrinkBars(barElem.get(0), doneFn);
-      });
+      barElem.click(bind(this, this.onBarClick_, key, zoomKey, barElem));
     }
   }
   return barElem;
 };
 
 GraphMaker.prototype.graphForKey = function(key) {
+  this.curKey_ = key;
   var graphElem = $('<div id="graph"/>');
   var titleElem = $('<div class="bargraph title"/>');
   var childElem = $('<div class="bargraph"/>');
