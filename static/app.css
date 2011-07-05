@@ -8,6 +8,7 @@
 }
 
 #button-strip {
+  z-index: 42;
   position: absolute;
   width: 100%;
 }
@@ -82,9 +83,22 @@ span.content {
 }
 
 #imgs {
+  position: relative;
   margin: 0 auto;
   width: 1280px;
   height: 480px;
+}
+
+#imgs div {
+  z-index: -1;
+  display: inline;
+  position: absolute;
+  background-color: #3b3b3b;
+  width: 50%;
+  height: 100%;
+  background-image: url('spinner.gif');
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 #content {

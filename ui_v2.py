@@ -235,8 +235,8 @@ class HtmlPrinter:
       window.onload = function() {{
         var rgbs_json = {rgbs_json};
         var maker = new GraphMaker(rgbs_json);
-        $('#imgs').append($('<img id="img1" src="composites/1r.jpg"/>'));
-        $('#imgs').append($('<img id="img0" src="composites/0r.jpg"/>'));
+        $('#imgs').append($('<div/><img id="img1" src="composites/1r.jpg"/>'));
+        $('#imgs').append($('<div/><img id="img0" src="composites/0r.jpg"/>'));
         $('#content').append(maker.graphForKey('r'));
         $('#content').append(maker.makeGuideBars());
         maker.resizePage();

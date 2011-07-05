@@ -178,9 +178,12 @@ GraphMaker.prototype.replaceGraph = function(newContent, key) {
     var valElem = $(this).children('.value');
     valElem.animate({'height': targetHeight}, GLOBALS.animateTime, cb.callback());
   });
-  $('#img1').attr('src', 'composites/1' + key + '.jpg');
-  $('#img0').attr('src', 'composites/0' + key + '.jpg');
-  $('#img0, #img1').animate({'height': '100%'}, GLOBALS.animateTime);
+  var makeOpaque = function(selector) {
+    var cssAnim = {'opacity': 1};
+    return function() { $(selector).animate(cssAnim); };
+  };
+  $('#img1').attr('onload', makeOpaque('#img1')).attr('src', 'composites/1' + key + '.jpg');
+  $('#img0').attr('onload', makeOpaque('#img0')).attr('src', 'composites/0' + key + '.jpg');
 };
 
 GraphMaker.prototype.onBarClick_ = function(key, zoomKey, opt_barElem) {
@@ -190,7 +193,7 @@ GraphMaker.prototype.onBarClick_ = function(key, zoomKey, opt_barElem) {
   $('.bar').unbind();
   this.hideSubSlider_();
   this.positionSlider_($('#guide-graph-slider'), zoomKey);
-  $('#img0, #img1').animate({'height': 0}, GLOBALS.animateTime);
+  $('#img0, #img1').animate({'opacity': 0}, GLOBALS.animateTime);
 
   var newContent = this.graphForKey(zoomKey);
 
