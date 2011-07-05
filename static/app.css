@@ -155,7 +155,6 @@ span.content {
 
 .bargraph .bar .value:hover, .bargraph .bar.moving .value {
   text-indent: 0px;
-  cursor: pointer;
   border-top: 3px double #bbf;
 }
 

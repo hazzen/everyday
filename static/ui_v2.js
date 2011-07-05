@@ -154,6 +154,7 @@ GraphMaker.prototype.barForKey = function(key, opt_zoomKey) {
       barElem.mouseout(function() {
         self.hideSubSlider_();
       });
+      barElem.css({'cursor': 'pointer'});
       barElem.click(function() {
         $('.bar').unbind();
         self.hideSubSlider_();
