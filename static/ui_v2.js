@@ -113,13 +113,17 @@ GraphMaker.prototype.onGuideBarsClick_ = function() {
 
 GraphMaker.prototype.makeGuideBars = function() {
   var allElems = this.makeGuideBarsRecurse_('r');
-  var graphElem = $('<div class="mini-bargraph"/>');
-  var topLevelElem = $('<div id="guide-graph"/>');
+  var graphElem = $('<div class="mini-bargraph" />');
+  var topLevelElem = $('<div id="guide-graph" />');
   $.each(allElems, function(index, value) { value.appendTo(graphElem); });
   graphElem.appendTo(topLevelElem);
 
-  $('<div id="guide-graph-slider"/>').appendTo(topLevelElem);
-  $('<div id="guide-graph-sub-slider"/>').appendTo(topLevelElem);
+  var zeroPosA = $('<div style="position: relative; width:100%; height: 0"/>');
+  var zeroPosB = $('<div style="position: relative; width:100%; height: 0"/>');
+  $('<div id="guide-graph-slider"/>').appendTo(zeroPosA);
+  zeroPosA.appendTo(topLevelElem);
+  $('<div id="guide-graph-sub-slider"/>').appendTo(zeroPosB);
+  zeroPosB.appendTo(topLevelElem);
 
   graphElem.click(bind(this, this.onGuideBarsClick_));
   graphElem.mousemove(bind(this, this.guideBarsMouseMove_));
@@ -187,8 +191,9 @@ GraphMaker.prototype.replaceGraph = function(newContent, key) {
     var valElem = $(this).children('.value');
     valElem.animate({'height': targetHeight}, GLOBALS.animateTime, cb.callback());
   });
-  $('#img1').replaceWith(makeImage('1', key));
-  $('#img0').replaceWith(makeImage('0', key));
+  var height = $('#img0').height();
+  $('#img1').replaceWith(makeImage('1', key).height(height));
+  $('#img0').replaceWith(makeImage('0', key).height(height));
 };
 
 GraphMaker.prototype.onBarClick_ = function(key, zoomKey, opt_barElem) {
@@ -277,7 +282,7 @@ GraphMaker.prototype.resizePage = function() {
   var brackets = [
     {'reqWidth': 1280, 'reqHeight': 480},
     {'reqWidth': 800,  'reqHeight': 300},
-    {'reqWidth': 620,  'reqHeight': 240},
+    {'reqWidth': 640,  'reqHeight': 240},
   ];
   var width = $(window).width();
   var height = $(window).height();
@@ -285,8 +290,9 @@ GraphMaker.prototype.resizePage = function() {
   for (var i = 0; i < bracketsLength; ++i) {
     if (i == bracketsLength - 1 || (width >= brackets[i].reqWidth &&
                                     height >= brackets[i].reqHeight + heightPadding)) {
-      $('#img0, #img1').width(brackets[i].reqWidth / 2);
-      $('#imgs').width(brackets[i].reqWidth).height(brackets[i].reqHeight);
+      $('#img0, #img1').height(brackets[i].reqHeight).width(brackets[i].reqWidth / 2);
+      $('#imgs').height(brackets[i].reqHeight).width(brackets[i].reqWidth);
+      $('#imgs div').height(brackets[i].reqHeight).width(brackets[i].reqWidth / 2);
       break;
     }
   }

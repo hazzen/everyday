@@ -57,6 +57,12 @@ span.content {
   overflow: scroll;
 }
 
+#footer {
+  position: relative;
+  text-align: center;
+  top: 150px;
+}
+
 #about {
   position: absolute;
   width: 100%;
@@ -69,12 +75,8 @@ span.content {
   margin-bottom: 1em;
 }
 
-#img1 {
-  float: left;
-}
-
-#img0 {
-  float: left;
+#imgs img {
+  position: relative
 }
 
 .title {
@@ -91,11 +93,9 @@ span.content {
 
 #imgs div {
   z-index: -1;
-  display: inline;
-  position: absolute;
+  display: block-inline;
+  float: left;
   background-color: #3b3b3b;
-  width: 50%;
-  height: 100%;
   background-image: url('spinner.gif');
   background-repeat: no-repeat;
   background-position: center;
@@ -110,7 +110,7 @@ span.content {
 }
 
 #graph {
-  position: absolute;
+  position: relative;
   left: 200px;
   width: 600px;
   height: 200px;
@@ -120,7 +120,7 @@ span.content {
   position: relative;
   display: table;
   margin: 0 auto;
-  top: 200px;
+  /*top: 200px;*/
 }
 
 .bargraph.title {
@@ -201,8 +201,8 @@ span.content {
 }
 
 #guide-graph-slider {
-  position: absolute;
-  height: 100%;
+  position: relative;
+  height: 100px;
   width: 100%;
   background: #445;
   z-index: -2;
@@ -210,10 +210,8 @@ span.content {
 
 #guide-graph-sub-slider {
   display: none;
-  position: absolute;
-  float: left;
-  height: 100%;
-  top: 0px;
+  position: relative;
+  height: 100px;
   background: #667;
   z-index: -1;
   border-left: 1px dashed #88f;

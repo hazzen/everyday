@@ -235,8 +235,8 @@ class HtmlPrinter:
       window.onload = function() {{
         var rgbs_json = {rgbs_json};
         var maker = new GraphMaker(rgbs_json);
-        $('#imgs').append($('<div/><img id="img1" src="composites/1r.jpg"/>'));
-        $('#imgs').append($('<div/><img id="img0" src="composites/0r.jpg"/>'));
+        $('#imgs').append($('<div><img id="img1" src="composites/1r.jpg"/></div>'));
+        $('#imgs').append($('<div><img id="img0" src="composites/0r.jpg"/></div>'));
         $('#content').append(maker.graphForKey('r'));
         $('#content').append(maker.makeGuideBars());
         maker.resizePage();
@@ -262,9 +262,6 @@ class HtmlPrinter:
     <div class="button" id="about-button">about</div>
     <div class="button">
       <a href='https://github.com/hazzen/everyday'><span></span>code</a>
-    </div>
-    <div class="button">
-      <a href='http://www.hazzens.com'><span></span>home</a>
     </div>
   </div>
   <div id="about">
@@ -318,7 +315,16 @@ class HtmlPrinter:
     </span>
   </div>
   <div id="imgs"></div>
-  <div id="content"></div>\n'''
+  <div id="content"></div>
+  <div id="footer">
+    <em>everyday</em>: a project over 6 months by mikey.
+    <br><br>
+    find me on twitter @hazzen (although it mostly concerns banalities of my
+    life). contact me at mrlevine using gmail.
+    <br><br>
+    verified to work in recent versions of chrome, safari, and firefox.
+    reportedly looks ugly in ie. still attempting to find an opera user.
+  </div>\n'''
 
   def PrintHtml(self, rgbs_json, out_file=sys.stdout):
     out_file.write(self._Header(rgbs_json))
